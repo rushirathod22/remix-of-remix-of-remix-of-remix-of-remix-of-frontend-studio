@@ -1,12 +1,14 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { MoreHorizontal, Plus } from "lucide-react";
-import { apisQo, qk } from "@/lib/queries";
+import { useState } from "react";
+import { FlaskConical, MoreHorizontal, Plus } from "lucide-react";
+import { apisQo } from "@/lib/queries";
 import { ms } from "@/lib/format";
-import { RelTime, ConfirmDialog, DemoTag, EmptyState, HealthBadge, PageHeader, RiskBadge  } from "@/components/shared";
+import { RelTime, DemoTag, EmptyState, HealthBadge, PageHeader, RiskBadge } from "@/components/shared";
 import { PageError, PagePending } from "@/components/layout";
+import { TestRunner } from "@/components/test-runner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -28,17 +30,10 @@ export const Route = createFileRoute("/_app/apis/")({
 });
 
 function ApisPage() {
-  const queryClient = useQueryClient();
+  const [quickTestId, setQuickTestId] = useState<string | null>(null);
   const { data: apis } = useSuspenseQuery({ ...apisQo() });
 
-  const remove = useMutation({
-    mutationFn: (id: string) => servicesRemove(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.apis });
-      toast.success("API removed");
-    },
-    onError: () => toast.error("Couldn't remove this API"),
-  });
+  const quickTestApi = quickTestId ? apis.find((a) => a.id === quickTestId) : undefined;
 
   return (
     <>
@@ -102,6 +97,9 @@ function ApisPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => setQuickTestId(a.id)}>
+                          <FlaskConical className="size-4" aria-hidden /> Quick test
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild><Link to="/apis/$id" params={{ id: a.id }}>View details</Link></DropdownMenuItem>
                         <DropdownMenuItem asChild><Link to="/apis/$id/edit" params={{ id: a.id }}>Edit</Link></DropdownMenuItem>
                       </DropdownMenuContent>
@@ -114,18 +112,21 @@ function ApisPage() {
         )}
       </div>
 
-      {/* Deletion is offered on the detail page; list rows keep read/edit actions only. */}
-      <span className="hidden">{remove.isPending ? "Removing…" : ""}<ConfirmDialogSafe /></span>
+      <Dialog open={!!quickTestApi} onOpenChange={(open) => !open && setQuickTestId(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="size-4 text-primary" aria-hidden /> Quick test — {quickTestApi?.name}
+            </DialogTitle>
+            <DialogDescription>
+              One-off simulated test against the saved configuration. For full history, view the API details.
+            </DialogDescription>
+          </DialogHeader>
+          {quickTestApi && (
+            <TestRunner api={quickTestApi} />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
-}
-
-// Kept out of the JSX above to avoid importing confirm dialogs for actions
-// that live on the detail page.
-function ConfirmDialogSafe() {
-  return null;
-}
-
-function servicesRemove(id: string) {
-  return import("@/lib/services").then((m) => m.services.apis.remove(id));
 }
