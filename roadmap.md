@@ -22,6 +22,6 @@ Source of truth for continuing the partially developed APIShield frontend. Do no
 - [x] Root metadata/fonts cleanup + sonner Toaster mount
 
 ## Backlog / pending
-- [ ] Ad-hoc quick test from the APIs list (services.testing.run supports it)
+- [x] Ad-hoc quick test from the APIs list (dialog reusing TestRunner, wired 2026-10-22)
+- [x] Mock auth pages (login/signup/forgot-password wired to services.auth)
 - [ ] Real backend integration (FastAPI contract in `services.ts` remote mode) — explicitly out of scope for now
-- [ ] Mock auth pages (services.auth exists) — not part of spec pages listed by owner
