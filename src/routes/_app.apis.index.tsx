@@ -31,17 +31,10 @@ export const Route = createFileRoute("/_app/apis/")({
 });
 
 function ApisPage() {
-  const queryClient = useQueryClient();
+  const [quickTestId, setQuickTestId] = useState<string | null>(null);
   const { data: apis } = useSuspenseQuery({ ...apisQo() });
 
-  const remove = useMutation({
-    mutationFn: (id: string) => servicesRemove(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qk.apis });
-      toast.success("API removed");
-    },
-    onError: () => toast.error("Couldn't remove this API"),
-  });
+  const quickTestApi = quickTestId ? apis.find((a) => a.id === quickTestId) : undefined;
 
   return (
     <>
