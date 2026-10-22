@@ -98,6 +98,9 @@ function ApisPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => setQuickTestId(a.id)}>
+                          <FlaskConical className="size-4" aria-hidden /> Quick test
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild><Link to="/apis/$id" params={{ id: a.id }}>View details</Link></DropdownMenuItem>
                         <DropdownMenuItem asChild><Link to="/apis/$id/edit" params={{ id: a.id }}>Edit</Link></DropdownMenuItem>
                       </DropdownMenuContent>
@@ -110,18 +113,21 @@ function ApisPage() {
         )}
       </div>
 
-      {/* Deletion is offered on the detail page; list rows keep read/edit actions only. */}
-      <span className="hidden">{remove.isPending ? "Removing…" : ""}<ConfirmDialogSafe /></span>
+      <Dialog open={!!quickTestApi} onOpenChange={(open) => !open && setQuickTestId(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="size-4 text-primary" aria-hidden /> Quick test — {quickTestApi?.name}
+            </DialogTitle>
+            <DialogDescription>
+              One-off simulated test against the saved configuration. For full history, view the API details.
+            </DialogDescription>
+          </DialogHeader>
+          {quickTestApi && (
+            <TestRunner api={quickTestApi} />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
-}
-
-// Kept out of the JSX above to avoid importing confirm dialogs for actions
-// that live on the detail page.
-function ConfirmDialogSafe() {
-  return null;
-}
-
-function servicesRemove(id: string) {
-  return import("@/lib/services").then((m) => m.services.apis.remove(id));
 }
